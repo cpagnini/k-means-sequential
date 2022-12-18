@@ -6,6 +6,7 @@
 #include <omp.h>
 #include<vector>
 #include<iterator>
+#include<fstream>
 
 using namespace std;
 using namespace std::chrono;
@@ -22,7 +23,7 @@ void update_centroids(vector<Cluster> &clusters);
 void draw_chart_gnu(vector<Point> &points);
 
 int main() {
-    
+    auto start = std::chrono::system_clock::now();
     int num_point;
     int num_cluster;
     int num_iterations;
@@ -38,12 +39,6 @@ int main() {
     vector<Point> points = initalize_points(num_point);
 
     vector<Cluster> clusters = initalize_clusters(num_cluster);
-    try{
-        printf("Drawing the chart...\n");
-        draw_chart_gnu(points);
-    }catch(int e){
-        printf("Chart not available, gnuplot not found");
-    }
     
    for(int i=0;i<num_iterations;i++){
         assign_centroid(points, clusters);
@@ -57,6 +52,15 @@ int main() {
     }catch(int e){
         printf("Chart not available, gnuplot not found");
     }
+
+    auto end = std::chrono::system_clock::now();
+    double duration = chrono::duration_cast<chrono::milliseconds>(end-start).count();
+    
+    
+    ofstream outfile;
+    outfile.open("Results.txt", fstream::app);
+    outfile<<"Num points: "<<num_point<<endl<<"Num clusters: "<<num_cluster<<endl<<"Num iterations: "<<num_iterations<<endl<<"Total milliseconds: "<<duration<<endl;
+    outfile.close();
 }
 
 vector <Point> initalize_points(int num_point){
@@ -107,6 +111,8 @@ void assign_centroid(vector<Point> &points, vector<Cluster> &clusters){
     //Double loop points and clusters in order to find the MIN distance between those two. It then assign the point to the cluster which is closer.
     //*****************************************************************************************************************
     double min_distance;
+    #pragma omp parallel
+    #pragma omp for
     for(Point& p: points){
         Cluster temp_Cluster = clusters[0];
         min_distance = distance(p, temp_Cluster);
@@ -120,6 +126,7 @@ void assign_centroid(vector<Point> &points, vector<Cluster> &clusters){
             }
         }
         p.set_id_c(cluster_id); //The cluster id identify the position of this cluster in the clusters array
+        #pragma omp crtical
         clusters[cluster_id].add_point(p);
     }
    
