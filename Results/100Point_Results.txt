@@ -1,0 +1,4 @@
+Num points: 100
+Num clusters: 5
+Num iterations: 20
+Total milliseconds: 339

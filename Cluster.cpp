@@ -24,12 +24,8 @@ public:
     }
 
     void add_point(Point point){
-        #pragma omp atomic
         candidate_coord_x += point.get_coord_x();
-        #pragma omp atomic
         candidate_coord_y += point.get_coord_y();
-        #pragma omp atomic
-
         size++;
         
     }
